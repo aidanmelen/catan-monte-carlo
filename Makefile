@@ -1,5 +1,7 @@
 NAME = catan-monte-carlo
 
+all :: build run
+
 build ::
 	# Build release image.
 	docker build . -t $(NAME)
