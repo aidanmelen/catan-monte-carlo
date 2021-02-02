@@ -1,17 +1,11 @@
-# A monte carlo simuation of card stack: dice mode
-
-import pandas as pd
-
+# A Monte Carlo simuation of card stack: dice mode
+import click
 import random
-import os
+import helpers
 
 
-NUMBER_OF_ROLLS = 10000
-
-
-def generate_dice_mode_card_stack():
-    """Generate a new dice mode card stack list."""
-
+def create_card_stack():
+    """Create a new card stack list."""
     # two virtual card stacks containing 36 cards each are generated
     card_stack_1 = [
         2,
@@ -44,34 +38,68 @@ def generate_dice_mode_card_stack():
 
     return card_stack
 
-print(f"Running dice mode with {NUMBER_OF_ROLLS} rolls.")
 
-results = {}
-count = 0
-while count < NUMBER_OF_ROLLS:
+def run(number_of_rolls):
+    """Run the rolls for the simulation."""
+    rolls = {}
+    count = 0
+    while True:
 
-    random_rolls_in_game = random.randint(50, 100)
-    for i in range(0, random_rolls_in_game):
-        # start of a new game
-        card_stack = generate_dice_mode_card_stack()
+        # randomize the number of rolls in a game
+        rolls_in_game = random.randint(50, 100)
 
-        while card_stack:
-            # draw a card from the top of the card stack
-            roll = card_stack.pop()
-            count += 1
+        for i in range(0, rolls_in_game):
+            # create a new card stack for each new game
+            card_stack = create_card_stack()
 
-            # record result
-            if roll in results:
-                results[roll] += 1
-            else:
-                results[roll] = 1
+            while card_stack:
+                # draw a card from the top of the card stack
+                roll = card_stack.pop()
+                count += 1
 
-print(results)
+                # record result
+                if roll in rolls:
+                    rolls[roll] += 1
+                else:
+                    rolls[roll] = 1
+                
+                # break inner while loop
+                if count > number_of_rolls:
+                    break
 
-df = pd.DataFrame.from_dict(results, orient="index")
-df.sort_index(inplace=True)
+            # break inner for loop
+            if count > number_of_rolls:
+                break
+        
+        # break outter while loop
+        if count > number_of_rolls:
+            break
+                    
+    return rolls
 
-if not os.path.exists('results'):
-    os.makedirs('results')
 
-df.to_csv(f'results/dice-mode-{NUMBER_OF_ROLLS}.csv', index = True)
+@click.command()
+@click.option("rolls", "--rolls", "-r", default=100, show_default=True, help="The number of rolls used in the simulation.")
+@click.option("write_csv", "--write-csv", "-w", is_flag=True, help="Write dataframe to CSV file.")
+@click.option("write_chart", "--write-chart", "-wc", is_flag=True, help="Write chart to file.")
+@click.option("plot_chart", "--plot-chart", "-pc", is_flag=True, help="Plot chart.")
+def main(rolls, write_csv, write_chart, plot_chart):
+    """The main entrypoint."""
+    print(f"Running dice mode with {rolls} rolls.\n")
+    data = run(rolls)
+    df = helpers.get_df(data)
+
+    print(df.to_string(index=False))
+
+    if write_csv:
+        helpers.write_csv(df, 'dice', rolls)
+
+    if write_chart:
+        helpers.write_chart(df, 'dice', rolls)
+
+    if plot_chart:
+        helpers.plot_chart(df)
+
+
+if __name__ == "__main__":
+    main()
