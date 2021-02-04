@@ -42,6 +42,7 @@ def create_card_stack():
 def run(number_of_rolls):
     """Run the rolls for the simulation."""
     rolls = {}
+    card_stack = []
     count = 0
     while True:
 
@@ -50,7 +51,9 @@ def run(number_of_rolls):
 
         for i in range(0, rolls_in_game):
             # create a new card stack for each new game
-            card_stack = create_card_stack()
+            
+            if not card_stack:
+                card_stack = create_card_stack()
 
             while card_stack:
                 # draw a card from the top of the card stack
